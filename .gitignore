@@ -7,6 +7,7 @@
 smart_parking
 parking_monitor
 parking_driver_test
+smart_parking.exe
 
 # Linux kernel driver build files
 kernel_driver/*.ko

@@ -12,7 +12,11 @@ using namespace std;
 // ============================================================
 
 ParkingSystem::ParkingSystem(int totalSlots, const string& fileName)
+#ifdef _WIN32
+    : historyHead(nullptr), dataFile(fileName), logger("parking.log"), ipc("smart_parking_fifo")
+#else
     : historyHead(nullptr), dataFile(fileName), logger("parking.log"), ipc("/tmp/smart_parking_fifo")
+#endif
 {
     if (totalSlots <= 0) {
         throw invalid_argument(

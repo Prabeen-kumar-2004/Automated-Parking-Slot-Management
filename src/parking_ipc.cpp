@@ -3,11 +3,16 @@
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#ifdef _WIN32
+#include <cstdio>
+#endif
 
 ParkingIPC::ParkingIPC(const std::string& path)
     : fifoPath(path) {
@@ -25,6 +30,19 @@ void ParkingIPC::createFIFO() const {
         return;
     }
 
+#ifdef _WIN32
+    std::ofstream file(fifoPath, std::ios::app);
+    if (!file.is_open()) {
+        throw std::runtime_error(
+            "Unable to create FIFO '" +
+            fifoPath +
+            "': " +
+            std::strerror(errno)
+        );
+    }
+
+    file.close();
+#else
     if (mkfifo(fifoPath.c_str(), 0666) == -1) {
 
         if (errno == EEXIST) {
@@ -38,6 +56,7 @@ void ParkingIPC::createFIFO() const {
             std::strerror(errno)
         );
     }
+#endif
 }
 
 void ParkingIPC::removeFIFO() const {
@@ -46,6 +65,16 @@ void ParkingIPC::removeFIFO() const {
         return;
     }
 
+#ifdef _WIN32
+    if (std::remove(fifoPath.c_str()) != 0) {
+        throw std::runtime_error(
+            "Unable to remove FIFO '" +
+            fifoPath +
+            "': " +
+            std::strerror(errno)
+        );
+    }
+#else
     if (unlink(fifoPath.c_str()) == -1) {
 
         throw std::runtime_error(
@@ -55,6 +84,7 @@ void ParkingIPC::removeFIFO() const {
             std::strerror(errno)
         );
     }
+#endif
 }
 
 void ParkingIPC::sendMessage(
